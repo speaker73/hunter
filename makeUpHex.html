@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Hunter</title>
+
+	<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+	
+<script type="text/javascript">
+function mapCreator(rows, isNotWrite){
+var minWidth = 	rows - ( (rows-1)/2);
+var renderCor = function(x, y, i){
+	return  y+','+x(i)
+};
+var notCor = function(){
+	return isNotWrite && 'style="display:none"'
+}
+function renderRow(end, invert){
+			var znak = invert?1:-1;
+			var y = (rows - end)*znak;
+			var x = function(i){
+				//console.log(y+','+i, end+'-+'+minWidth);
+					return !invert?i-(end-minWidth):i-(rows-minWidth);
+			};
+			document.write('<div class="clearfix" style="width:'+end*104+'px;margin:0 auto">');
+			for(var i = 0;i<end; i++){
+				document.write('<div id="x'+x(i)+'y'+y+'" class="hexagon float_left hunter_turn" data-x="'+x(i)+'" data-y="'+y+'"><span '+ notCor() +'>'+renderCor(x, y, i)+'</span></div>');	
+			}
+			document.write('</div>');
+		};
+function rowBuilder(minWidth, rows){
+	var start = rows;
+	var end = minWidth;
+	var invert = false
+	function ro(end){
+		
+		if( (end < rows) && !invert){
+			renderRow(end, invert);
+			end++
+			return ro(end);
+		};
+		if(end == rows){
+			renderRow(end, invert);
+			invert = true;
+			end--;
+			return ro(end);
+		}
+		if(invert && (minWidth!=end) ){
+			renderRow(end, invert);
+			end--;
+			return ro(end);
+		}
+		if(minWidth==end){
+			renderRow(end, invert);
+		}
+
+	}
+	return ro(end);
+
+}
+	console.log('start build;','minRows = '+ minWidth);
+	//map start
+	document.write('<div class="mapHex float_left orange_block float_left" style="padding:0 !important">');
+rowBuilder(minWidth, rows);
+	
+	//map end
+	document.write('</div>');
+	console.log('finish hex build',document.getElementsByClassName('hexagon').length);
+}
+
+var hunter = {
+	step:1,
+	view:'<div class="hunter"><img class="hunter-view" src="img/hunter_dog.jpg" alt="" style="width:0"/></div>',
+	cor:{x:0,y:0}
+}
+function hunterInit(){
+	var zero = document.getElementById('x0y0');
+	hunter.cor.x = 0;
+	hunter.cor.y = 0;
+	zero.innerHTML = zero.innerHTML + hunter.view;
+}
+
+function hunterGo(id){
+	
+	var goal = document.getElementById(id);
+	var goalCor = {
+					y:goal.getAttribute('data-y'),
+					x:goal.getAttribute('data-x')
+				};
+	//console.log('goalCor', goalCor, hunter);
+	var isStep = {
+				  X:Math.abs(goalCor.x - hunter.cor.x) > hunter.step,
+				  Y:Math.abs(goalCor.y - hunter.cor.y) > hunter.step,
+				  cX:Math.abs(goalCor.x - hunter.cor.x),
+				  cY:Math.abs(goalCor.y - hunter.cor.y),
+				  dual_left: ( (Number(hunter.cor.y) - 1) == Number(goalCor.y) ) && ( (Number(hunter.cor.x) - 1) == Number(goalCor.x) ),
+				  dual_right:( (Number(hunter.cor.x) + 1) == Number(goalCor.x) ) && ( (Number(hunter.cor.y) + 1) == Number(goalCor.y) )				  
+				};
+				console.log(isStep);
+	if(isStep.X || isStep.Y || isStep.dual_left || isStep.dual_right){
+		console.log('stop');
+		return
+	}else {
+		document.getElementsByClassName("hunter")[0].remove();
+		hunter.cor.x = goalCor.x;
+		hunter.cor.y = goalCor.y;
+		isSteper(hunter.step, hunter.cor);
+		goal.innerHTML = goal.innerHTML + hunter.view;		
+	}
+	rabbitGo(rabbits);
+}
+var turns = document.getElementsByClassName("hunter_turn");
+function initHunterGo() {
+	for(var i=0;i<turns.length;i++){
+	turns[i].onclick = function(e) {
+		//console.log(e.target.id);
+		//hunterGo(e.target.id);
+		hunterInfinityGo(e.target.id);
+	};
+	}
+}
+function hunterInfinityGo(id){
+	var goal = document.getElementById(id);
+	var goalCor = {
+					y:Number(goal.getAttribute('data-y') ),
+					x:Number(goal.getAttribute('data-x') )
+				};
+	//directions			
+	var dir = [
+		{	
+			name:'left',
+			fn: function(object){
+				return {x: object.cor.x - 1, y: object.cor.y}
+			},
+			unFn: function(object){
+				return {x: object.cor.x + 1, y: object.cor.y}
+			}
+		},
+		{
+			name:'right',
+			fn: function(object){
+				return {x: object.cor.x + 1, y: object.cor.y}
+			},
+			unFn: function(object){
+				return {x: object.cor.x - 1, y: object.cor.y}
+			},
+		},
+		{
+			name:'right and top',
+			fn: function(object){
+				return	{ x: object.cor.x + 1,
+						  y : object.cor.y - 1 }
+			},
+			unFn: function(object){
+				return { x : object.cor.x - 1,
+						 y : object.cor.y + 1
+						}
+			},
+		},
+		{
+			name:'left and top',
+			fn:  function(object){
+				return { x : object.cor.x,
+						 y : object.cor.y - 1
+						}
+			},
+			unFn:  function(object){
+				return { x : object.cor.x,
+				   		 y :  object.cor.y + 1}
+			},
+		},
+		{
+			name:'left and bottom',
+			fn: function(object){
+				return { x : object.cor.x - 1,
+						 y : object.cor.y + 1
+						}
+			},
+			unFn: function(object){
+				return	{ x: object.cor.x + 1,
+						  y : object.cor.y - 1 }
+			},
+		},
+		{
+			name:'right and bottom',
+			fn:  function(object){
+				return { x : object.cor.x,
+				   		 y :  object.cor.y + 1}
+			},
+			unFn:  function(object){
+				return { x : object.cor.x,
+						 y : object.cor.y - 1
+						}
+			},
+
+		}
+	];
+	dir.forEach(function(item){
+		var er = item.fn(hunter);
+		//console.log(goalCor, er, item.name, item);
+		if(er.x == goalCor.x && er.y == goalCor.y){
+			console.log('Hunter goes '+ item.name, hunter);
+			hunter.cor.x = Number(er.x);
+			hunter.cor.y = Number(er.y);
+			var hexagons = document.getElementsByClassName('hexagon');
+			[].forEach.call(hexagons, function (element){
+				var dataX = Number(element.getAttribute('data-x'));
+				var dataY = Number(element.getAttribute('data-y'));
+				var obj = {cor:{x:dataX, y:dataY}};
+				var attrRes =  item.fn(obj);
+				element.setAttribute('data-x', attrRes.x);
+				element.setAttribute('data-y', attrRes.y);
+				element.setAttribute('id', 'x'+ attrRes.x +'y'+attrRes.y);
+				element.getElementsByTagName('span')[0].innerHTML = attrRes.y + ', ' + attrRes.x;
+
+		});
+			[].forEach.call(hexagons, function (element){
+					element.classList.remove('redder');
+				});
+			//var rabbits =  document.getElementsByClassName('rabbit');
+			/*[].forEach.call(rabbits, function (element){
+				
+				var dataX = Number(element.parentElement.getAttribute('data-x'));
+				var dataY = Number(element.parentElement.getAttribute('data-y'));
+				var obj = {cor:{x:dataX, y:dataY}};
+				var attrRes =  item.unFn(obj);
+				var id = 'x'+ attrRes.x +'y'+attrRes.y;
+				var hex = document.getElementById(id);
+				console.log(hex, id);
+				if(hex){
+					console.log(hex, id, 1);
+					document.getElementById(id).appendChild(element);
+				}else{
+					console.log(hex, id, 2);
+					var reserve = document.createElement('div');
+					reserve.setAttribute('style', 'display:none');
+					reserve.setAttribute('data-x', attrRes.x);
+					reserve.setAttribute('data-y', attrRes.y);
+					reserve.appendChild(element);
+					document.body.appendChild(reserve);
+				}
+				
+			});*/
+			console.log(rabbits, 1);
+			
+			rabbits.forEach(function(rabbit){
+				var id = 'x' + rabbit.cor.x + 'y' + rabbit.cor.y;
+				var hex = document.getElementById(id);
+				var rabbitElements =  document.getElementsByClassName('rabbit');
+				if(hex){
+					[].forEach.call(rabbitElements, function (element){
+						if(element.getAttribute('id') == rabbit.id){
+							hex.appendChild(element);
+						}
+					});
+				}else{
+					[].forEach.call(rabbitElements, function (element){
+						if(element.getAttribute('id') == rabbit.id){
+							var reserve = document.createElement('div');
+							reserve.setAttribute('class', 'reserve-hex');
+							reserve.setAttribute('style', 'display:none');
+							reserve.setAttribute('data-x', rabbit.cor.x);
+							reserve.setAttribute('data-y', rabbit.cor.y);
+							reserve.appendChild(element);
+							document.body.appendChild(reserve)
+						}
+					});
+					
+				}
+
+			});
+		}
+	});
+
+}	
+function isSteper(step, cor){
+	var turns = document.getElementsByClassName("hunter_turn");
+	var goalCor = {};
+	for(var i=0;i<turns.length;i++){
+		turns[i].classList.remove('greener');
+	}
+	for(var i=0;i<turns.length;i++){
+	goalCor.x = turns[i].getAttribute('data-x');
+	goalCor.y = turns[i].getAttribute('data-y');
+	var isStep = {
+				  X:Math.abs(goalCor.x - cor.x) > step,
+				  Y:Math.abs(goalCor.y - cor.y) > step,
+				  cX:Math.abs(goalCor.x - cor.x),
+				  cY:Math.abs(goalCor.y - cor.y),
+				  eqal_step: (Math.abs(goalCor.x - cor.x) == step) && (Math.abs(goalCor.y - cor.y) == step),
+				  dual_left: ( (Number(cor.y) - 1) == Number(goalCor.y) ) && ( (Number(cor.x) - 1) == Number(goalCor.x) ),
+				  dual_right:( (Number(cor.x) + 1) == Number(goalCor.x) ) && ( (Number(cor.y) + 1) == Number(goalCor.y) )
+				};
+				//console.log(isStep, 'gree');
+		if(isStep.X || isStep.Y || isStep.dual_left || isStep.dual_right){
+			//console.log(isStep, 'gressse');
+			turns[i].className += " greener";
+		}	
+	}
+}
+
+
+var rabbit = {
+	step:1,
+	view:function(id){return '<div id="'+id+'"class="rabbit"><img class="rabbit-view" src="img/rabbi3.png" alt="" /></div>'}
+};
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+var rabbits = [];
+function rabbitGen(num){
+	var turns = document.getElementsByClassName("hunter_turn");
+	var colors = ['red', '', ''];
+	for(var i=0;i<num;i++){
+		var hex_in = turns[getRandomInt(0, turns.length)];
+		hex_in.innerHTML = hex_in.innerHTML + rabbit.view("rabbit_"+i);
+		var cor = {
+			x:hex_in.getAttribute('data-x'),
+			y:hex_in.getAttribute('data-y')
+		};
+		rabbits.push({id:"rabbit_"+i, step:rabbit.step, cor:cor, color:colors[i]});
+	}
+}
+function myXOR(a,b) {
+  return ( a || b ) && !( a && b );
+}
+function rabbitGo(rabbits){
+var isSteps = [];
+//clear 
+
+var hexagons = document.getElementsByClassName('hexagon');
+[].forEach.call(hexagons, function (element){
+	element.classList.remove('redder');
+});
+	rabbits.forEach(function(item){
+		var rabbit = document.getElementById(item.id);
+		//console.log('rabbit',rabbit, item);
+		//console.log(rabbit.parentElement);
+		var rabbitParent = document.getElementById('x'+ item.cor.x + 'y' + item.cor.y);
+		if(!rabbitParent){
+			console.log('none parent');
+			var dir = [
+				{	
+					name:'left',
+					fn: function(object){
+						return {x: object.cor.x - 1, y: object.cor.y}
+					},
+				},
+				{
+					name:'right',
+					fn: function(object){
+						return {x: object.cor.x + 1, y: object.cor.y}
+					},
+					
+				},
+				{
+					name:'left and top',
+					fn:  function(object){
+						return { 
+							x : object.cor.x,
+						 	y : object.cor.y - 1
+						}
+					},
+				},
+				{
+					name:'right and bottom',
+					fn:  function(object){
+						return { x : object.cor.x,
+						   		 y :  object.cor.y + 1}
+					},
+				}
+			];
+			var id = getRandomInt(0, dir.length ); 
+			item.cor = dir[id].fn(item);
+			rabbit.parentElement.setAttribute('data-x', item.cor.x);
+			rabbit.parentElement.setAttribute('data-y', item.cor.y);
+			console.log(item.id+' go to ' + dir[id].name, item.cor, rabbit.parentElement);
+			return
+		}
+		isSteps.push({rabbit_id:item.id, hex:[]});
+
+		[].forEach.call(hexagons, function (element) {
+			var R =  {
+				goalX: Number(element.getAttribute('data-x') ),
+				goalY: Number(element.getAttribute('data-y') ),
+					x:Number(rabbit.parentElement.getAttribute('data-x') ),
+					y:Number(rabbit.parentElement.getAttribute('data-y') )
+					};
+		var iser = {
+				  X:Math.abs( R.goalX - R.x ) > item.step,
+				  Y:Math.abs( R.goalY- R.y ) > item.step,
+				  cX:Math.abs( R.goalX - R.x ),
+				  cY:Math.abs( R.goalY- R.y ),
+				  eqal_step: (Math.abs(R.goalX - R.x) == item.step) && (Math.abs(R.goalY - R.y) == item.step),
+				  vector: myXOR( R.x>R.goalX, R.y>R.goalY )
+				};
+
+				if(!(iser.X || iser.Y) && !iser.eqal_step){
+					element.className += " redder";
+					isSteps[isSteps.length-1].R = R
+					isSteps[isSteps.length-1].hex.push( {hex_id:element.getAttribute('id'), iser:iser} );
+				}
+		});
+
+	})
+
+	//console.log(isSteps, 'rabbits, steps');
+	isSteps.forEach(function(rabbit){
+		var rab = document.getElementById(rabbit.rabbit_id);
+		var ob = getRandomInt(0, rabbit.hex.length );
+		//console.log(ob, rabbit, 'ob');
+		var goal = document.getElementById(rabbit.hex[ob].hex_id);
+		goal.appendChild(rab);
+	})
+}
+// cretate World
+mapCreator(15, true);
+var numOf = 55;
+rabbitGen(numOf);
+if(document.getElementsByClassName('rabbit').length == numOf){
+	rabbitGo(rabbits);
+	hunterInit();
+	initHunterGo();
+	isSteper(hunter.step, hunter.cor);
+	setInterval( function(){
+	 
+	 var reserve = document.getElementsByClassName('reserve-hex');
+	 if(reserve && reserve.length > numOf){
+		[].forEach.call(reserve, function(e){
+			if(!e.children.length){
+				e.remove();
+			}
+	 	});	 	
+	 }
+	 
+	  rabbitGo(rabbits);
+	}, 100);
+}
+
+
+
+</script>
+
+<script type="text/javascript">
+  //centered map from page
+  	var hex_map = document.getElementsByClassName('mapHex')[0];
+  	var hex_width = hex_map.offsetWidth;
+  	var hex_height = hex_map.offsetHeight;
+  	var height = window.innerHeight;
+  	//console.log('start width');
+
+  	document.getElementsByTagName('body')[0].setAttribute("style", "width:"+hex_width+"px;margin:"+((height-hex_height)/2)+"px auto");
+  	//console.log('compleate');
+  	window.onresize = function(event) {
+    document.getElementsByTagName('body')[0].setAttribute("style", "width:"+hex_width+"px;margin:"+((height-hex_height)/2)+"px auto");
+};
+  </script>	
+
+	
+</body>
+</html>

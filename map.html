@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>hexagon_map</title>
+	<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+	<script>
+	function Hexagon(hexi, hexj, or_number, i){
+		var cont = i;
+		var hex2 = hexi/2;
+		document.write('<div class="orange_block float_left">');
+		
+		for(var i = cont; i < hex2; i++){
+			var i_chot = i*2;
+			var i_not_chot = i_chot + 1;
+   			console.log(i);
+   			document.write('<div class="clearfix hexagon_left">');
+   			for (var j = cont; j < hexj; j++){
+   				if(or_number){
+   				document.write('<div class="hexagon float_left">'+  i_chot +','+  j+'</div>');
+   				}else{
+   					document.write('<div class="hexagon float_left"></div>');
+   				}
+   			}
+			document.write('</div>');
+			document.write('<div class="clearfix ">');
+			for (var k = cont; k < hexj; k++) {
+				if(or_number){
+				document.write('<div class="hexagon float_left">'+ i_not_chot +','+ k +'</div>');
+				}else{
+					document.write('<div class="hexagon float_left"></div>');
+				}
+			}
+   			document.write('</div>');
+   		}
+   		
+   		document.write('</div>');
+	}
+	
+//Hexagon(2, 3, true, -1);
+//Hexagon(4, 4, true, -3);
+//Hexagon(4, 4, true, -2);
+//Hexagon(4, 6, true, -2);
+Hexagon(16, 6, true, -4);
+
+
+  </script>
+  <script type="text/javascript">
+  //centered map from page
+  	var hex_map = document.getElementsByClassName('orange_block')[0];
+  	var hex_width = hex_map.offsetWidth;
+  	var hex_height = hex_map.offsetHeight;
+  	var height = window.innerHeight;
+  	console.log('start width');
+
+  	document.getElementsByTagName('body')[0].setAttribute("style", "width:"+hex_width+"px;margin:"+((height-hex_height)/2)+"px auto");
+  	console.log('compleate');
+  </script>
+</body>
+</html>
